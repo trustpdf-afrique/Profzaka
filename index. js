@@ -1,0 +1,41 @@
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const { Configuration, OpenAIApi } = require("openai");
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+app.post("/api/expliquer", async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) {
+    return res.status(400).json({ error: "Le prompt est requis." });
+  }
+  try {
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Tu es un professeur très clair et simple. Explique toujours de façon facile à comprendre.",
+        },
+        { role: "user", content: prompt },
+      ],
+    });
+    res.json({ reponse: completion.data.choices[0].message.content.trim() });
+  } catch (error) {
+    res.status(500).json({ error: "Erreur API", details: error.message });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Serveur en ligne sur le port ${PORT}`);
+});
