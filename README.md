@@ -1,2 +1,0 @@
-# Profzaka
-Explicateur de cours
