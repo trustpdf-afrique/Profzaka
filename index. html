@@ -1,41 +1,91 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const { Configuration, OpenAIApi } = require("openai");
+<!DOCTYPE html><html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur de Fiche de Révision</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .fiche {
+      background-color: #fff;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom: 15px;
+    }
+    .section h3 {
+      margin-bottom: 5px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Générateur de Fiche de Révision</h1>
+  <textarea id="cours" rows="10" placeholder="Colle ton cours ici..."></textarea>
+  <button onclick="genererFiche()">Générer la fiche</button>  <div id="fiche" class="fiche" style="display:none">
+    <div class="section">
+      <h3>📘 Titre :</h3>
+      <div id="titre"></div>
+    </div>
+    <div class="section">
+      <h3>🧬 Idée principale :</h3>
+      <div id="idee"></div>
+    </div>
+    <div class="section">
+      <h3>🔑 Mots-clés :</h3>
+      <div id="mots"></div>
+    </div>
+    <div class="section">
+      <h3>📊 Contenu important :</h3>
+      <div id="contenu"></div>
+    </div>
+    <div class="section">
+      <h3>❓ Questions d'auto-test :</h3>
+      <div id="questions"></div>
+    </div>
+    <div class="section">
+      <h3>💡 Astuce de mémoire :</h3>
+      <div id="astuce"></div>
+    </div>
+  </div>  <script>
+    function genererFiche() {
+      const texte = document.getElementById("cours").value;
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+      const titre = texte.split("\n")[0] || "(Titre non détecté)";
+      const idee = "Ce cours parle de " + (texte.split(".")[0] || "...");
 
-const configuration = new Configuration({
-  apiKey: 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,
-});
-const openai = new OpenAIApi(configuration);
+      const motsCles = [...texte.matchAll(/(\b\w+\b)\s*[:=]\s*[^.,\n]+/g)].map(m => `- ${m[0]}`).join("\n");
+      const parties = texte.split(/\n{2,}/).slice(1, 4).map(p => `- ${p.trim().slice(0, 100)}...`).join("\n");
+      const questions = [
+        "1. Quel est le sujet principal ?",
+        "2. Donne deux mots-clés du cours.",
+        "3. Quelle est une information importante ?"
+      ].join("\n");
+      const astuce = "Essaie de répéter avec tes propres mots !";
 
-app.post("/api/expliquer", async (req, res) => {
-  const { prompt } = req.body;
-  if (!prompt) {
-    return res.status(400).json({ error: "Le prompt est requis." });
-  }
-  try {
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Tu es un professeur très clair et simple. Explique toujours de façon facile à comprendre.",
-        },
-        { role: "user", content: prompt },
-      ],
-    });
-    res.json({ reponse: completion.data.choices[0].message.content.trim() });
-  } catch (error) {
-    res.status(500).json({ error: "Erreur API", details: error.message });
-  }
-});
+      document.getElementById("titre").innerText = titre;
+      document.getElementById("idee").innerText = idee;
+      document.getElementById("mots").innerText = motsCles || "(Aucun mot-clé trouvé)";
+      document.getElementById("contenu").innerText = parties || "(Contenu non trouvé)";
+      document.getElementById("questions").innerText = questions;
+      document.getElementById("astuce").innerText = astuce;
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Serveur en ligne sur le port ${PORT}`);
-});
+      document.getElementById("fiche").style.display = "block";
+    }
+  </script></body>
+</html>
